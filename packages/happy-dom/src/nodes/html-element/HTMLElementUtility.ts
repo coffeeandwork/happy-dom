@@ -8,6 +8,25 @@ import type SVGElement from '../svg-element/SVGElement.js';
  */
 export default class HTMLElementUtility {
 	/**
+	 * Returns whether an element or any of its ancestors has the inert attribute.
+	 *
+	 * @param element Element to check.
+	 * @returns True if the element is in an inert tree.
+	 */
+	public static isInert(element: HTMLElement | SVGElement): boolean {
+		let current: HTMLElement | SVGElement | null = <HTMLElement | SVGElement>(
+			(element[PropertySymbol.proxy] || element)
+		);
+		while (current && typeof current.getAttribute === 'function') {
+			if (current.getAttribute('inert') !== null) {
+				return true;
+			}
+			current = <HTMLElement | SVGElement | null>current[PropertySymbol.parentNode];
+		}
+		return false;
+	}
+
+	/**
 	 * Triggers a blur event.
 	 *
 	 * @param element Element.
@@ -60,7 +79,8 @@ export default class HTMLElementUtility {
 		if (
 			document[PropertySymbol.activeElement] === target ||
 			!target[PropertySymbol.isConnected] ||
-			(<any>target).disabled
+			(<any>target).disabled ||
+			HTMLElementUtility.isInert(<HTMLElement | SVGElement>target)
 		) {
 			return;
 		}
